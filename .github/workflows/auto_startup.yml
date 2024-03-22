@@ -1,0 +1,40 @@
+name: Issues Troubleshooting
+on:
+  issues:
+    types:
+      - opened
+      - labeled
+      - reopened
+      - reopened
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+    
+      - name: Local Action
+        id: test-action
+        uses: minhnn-tiny/startup-typescript-action@main # Commit with the `v1` tag
+        with:
+          milliseconds: 1000
+      - name: Print Output
+        id: output
+        run: echo "${{ steps.test-action.outputs.time }}"
+        
+      - name: Deploy Stage
+        uses: fjogeleit/http-request-action@main
+        id: genRequest
+        with:
+          url: 'mandoguru.com:8000/v1.0.0/gen_prog/'
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json", "KEY": "MqQVfJ6Fq1umZnUI7ZuaycciCjxi3gM0"}'
+          data: '{"idea": "${{ github.event.issue.body }}"}'
+          preventFailureOnNoResponse: 'true'
+      - name: Show Response
+        run: |
+          echo ${{ steps.genRequest.outputs.response }}
+          echo ${{ steps.genRequest.outputs.headers }}
+          echo ${{ fromJson(steps.genRequest.outputs.response).repo_name }}
